@@ -215,6 +215,10 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
 
       try {
         const nameParts = surveyData.name.trim().split(/\s+/)
+        // Mint a single Meta event id shared by the browser Lead fire (on
+        // /thank-you) and the server-side CAPI fire so Meta can dedup them.
+        const metaEventId = 'lead-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10)
+        try { sessionStorage.setItem('lead_event_id', metaEventId) } catch {}
         const payload = {
           firstName: nameParts[0] || '',
           lastName: nameParts.slice(1).join(' ') || '',
@@ -229,6 +233,9 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
           reason: surveyData.reason,
           source: 'Survey Form',
           submittedAt: new Date().toISOString(),
+          meta_event_id: metaEventId,
+          meta_event_name: 'Lead',
+          qualified: true,
           ...trackingRef.current,
         }
         await fetch('/api/submit', {
